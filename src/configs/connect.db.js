@@ -14,7 +14,7 @@ const connectDB = async () => {
     }
 };
 process.on('SIGINT', async () => {
-    console.log('You are performing a server shutdown!');
+    console.log(colors.red('You are performing a server shutdown!'));
     await mongoose.connection.close();
     process.exit(0);
 });

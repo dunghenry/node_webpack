@@ -1,6 +1,9 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const colors = require('colors');
 dotenv.config();
+const path = require('path');
+const rfs = require('rotating-file-stream');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
 const cors = require('cors');
@@ -22,11 +25,21 @@ const options = {
     apis: ['./src/routes/*.js'],
 };
 const openapiSpecification = swaggerJsdoc(options);
+const isProduction = process.env.NODE_ENV === 'production';
+const accessLogStream = rfs.createStream('access.log', {
+    interval: '1d',
+    path: path.join(__dirname, 'logs'),
+});
+const devLogStream = rfs.createStream('dev.log', {
+    interval: '1d',
+    path: path.join(__dirname, 'logs'),
+});
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(morgan('dev'));
+app.use(morgan('tiny', { stream: devLogStream }));
+app.use(isProduction ? morgan('combined', { stream: accessLogStream }) : morgan('dev'));
 app.use(helmet());
 connectDB();
 routes(app);
@@ -34,4 +47,4 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiSpecification));
 app.get('/', (req, res) => {
     return res.send('Hi');
 });
-app.listen(port, () => console.log(`Server listening on http://localhost:${port}`));
+app.listen(port, () => console.log(colors.green(`Server listening on http://localhost:${port}`)));
