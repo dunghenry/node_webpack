@@ -36,10 +36,14 @@ const devLogStream = rfs.createStream('dev.log', {
 });
 const app = express();
 app.use(cors());
+app.use(express.static('./src/logs'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(morgan('tiny', { stream: devLogStream }));
-app.use(isProduction ? morgan('combined', { stream: accessLogStream }) : morgan('dev'));
+app.use(
+    isProduction
+        ? morgan('combined', { stream: accessLogStream })
+        : morgan('tiny', { stream: devLogStream }),
+);
 app.use(helmet());
 connectDB();
 routes(app);
